@@ -1,6 +1,6 @@
 import pytest
 
-from caesar import setup_charset, caesar, crack_caesar
+from ciphers.caesar import setup_charset, caesar, crack_caesar
 
 class TestCaesar:
     def test_setup_charset(self):
