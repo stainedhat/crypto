@@ -10,7 +10,7 @@ msg - dict() containing the following:
 message = {
         "charset": DEFAULT_CHARSET,
         "plaintext": "A super secret message",
-        "ciphertext": "M 461q3 4qo3q5 yq44msq",
+        "caesar_ciphertext": "M 461q3 4qo3q5 yq44msq",
         "key": 12,
     }
 """
@@ -43,11 +43,11 @@ class TestCaesar:
     def test_caesar_encryption(self, msg):
         # Test encryption
         c = caesar(msg["plaintext"], msg["key"], "encrypt")
-        assert c == msg["ciphertext"]
+        assert c == msg["caesar_ciphertext"]
 
     def test_caesar_decryption(self, msg):
         # Test decryption
-        c = caesar(msg["ciphertext"], msg["key"], "decrypt")
+        c = caesar(msg["caesar_ciphertext"], msg["key"], "decrypt")
         assert c == msg["plaintext"]
 
     def test_caesar_custom_charsets(self, msg):
@@ -67,24 +67,24 @@ class TestCaesar:
         with pytest.raises(ValueError):
             # this contains duplicates so should raise a ValueError
             charset = "asdfghjklkkjhedbb"
-            c = caesar(msg["plaintext"], msg["key"], "encrypt", charset=charset)
+            caesar(msg["plaintext"], msg["key"], "encrypt", charset=charset)
 
     def test_caesar_exceptions_bad_action(self, msg):
         # Test bad action
         with pytest.raises(ValueError):
             # Action must be either encrypt or decrypt
-            c = caesar(msg["plaintext"], msg["key"], "foobar")
+            caesar(msg["plaintext"], msg["key"], "foobar")
 
     def test_caesar_exceptions_non_integer_key(self, msg):
         # Test non-integer key raises exception
         with pytest.raises(ValueError):
-            c = caesar(msg["plaintext"], "foo", "encrypt")
+            caesar(msg["plaintext"], "foo", "encrypt")
 
 
     ##### crack_caesar() #####
     def test_crack_caesar_results(self, msg):
         plaintext = msg["plaintext"]
-        ciphertext = msg["ciphertext"]
+        ciphertext = msg["caesar_ciphertext"]
         key = msg["key"]
         result = crack_caesar(ciphertext, charset=None, verbose=False,
                               language=DEFAULT_LANGUAGE, min_probability=DEFAULT_MIN_PROBABILITY)
@@ -92,7 +92,7 @@ class TestCaesar:
 
     def test_crack_caesar_probable_solutions(self, msg):
         plaintext = msg["plaintext"]
-        ciphertext = msg["ciphertext"]
+        ciphertext = msg["caesar_ciphertext"]
         key = msg["key"]
         result = crack_caesar(ciphertext, charset=None, verbose=False,
                               language=DEFAULT_LANGUAGE, min_probability=DEFAULT_MIN_PROBABILITY)
