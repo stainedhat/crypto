@@ -3,7 +3,7 @@ import pytest
 from ciphers.caesar import DEFAULT_CHARSET
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def msg():
     message = {
         "charset": DEFAULT_CHARSET,

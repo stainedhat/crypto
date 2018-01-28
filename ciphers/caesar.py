@@ -1,10 +1,7 @@
-import enchant
+from ciphers.utils import word_check, DEFAULT_MIN_PROBABILITY
 
 
 DEFAULT_CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]\{}|;\':\",./<>?`~"
-DEFAULT_LANGUAGE = "en_US"
-DEFAULT_MIN_PROBABILITY = 0.75
-
 
 def setup_charset(charset=None):
     """
@@ -43,7 +40,6 @@ def caesar(message, key, action="encrypt", charset=None):
     # Ensure good starting types or raise an error during casting
     key = int(key)
     message = str(message)
-
     result = ""
 
     for char in message:
@@ -69,7 +65,7 @@ def caesar(message, key, action="encrypt", charset=None):
     return result
 
 
-def crack_caesar(message, charset=None, verbose=False, language=DEFAULT_LANGUAGE, min_probability=DEFAULT_MIN_PROBABILITY):
+def crack_caesar(message, charset=None, verbose=False, min_probability=DEFAULT_MIN_PROBABILITY):
     """
     Brute force all keys in the charset and look for a plaintext message
     :param message: Encrypted Caesar cipher message
@@ -81,17 +77,13 @@ def crack_caesar(message, charset=None, verbose=False, language=DEFAULT_LANGUAGE
     accurate and the decrypted message for that key
     """
     charset, charset_len = setup_charset(charset)
-
     message = str(message)
-    dictionary = enchant.Dict(language)
-
-    results = {}
     probable_solutions = {}
+    results = {}
 
     # Iterate through all of the indexes in the given charset and try to decrypt the message using each index as the key
     for key in range(charset_len):
         decrypted = ""
-
         for char in message:
             if char in charset:
                 char_index = charset.find(char)
@@ -105,17 +97,7 @@ def crack_caesar(message, charset=None, verbose=False, language=DEFAULT_LANGUAGE
         results[key] = decrypted
 
         # Check if the majority of the words are english. If so, this is probably the key we're looking for
-        decrypted_parts = decrypted.split(" ")
-        num_words = len(decrypted_parts)
-        probability = 0
-
-        # Calculate the probability that this is a possible solution by spell checking the words and calculating the
-        # percentage that are english or whatever language is passed in
-        for word in decrypted_parts:
-            if dictionary.check(word):
-                # This is a valid english word according to enchants dictionary
-                probability += 1
-        probability = round(float(probability) / num_words, 2)
+        probability = word_check(decrypted)
         if probability > min_probability:
             # More than 75% of the words are english so this could possibly be our secret
             probable_solutions[key] = {

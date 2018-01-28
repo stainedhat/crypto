@@ -1,16 +1,17 @@
 import pytest
 
 from ciphers.caesar import setup_charset, caesar, crack_caesar
-from ciphers.caesar import DEFAULT_CHARSET, DEFAULT_LANGUAGE, DEFAULT_MIN_PROBABILITY
+from ciphers.caesar import DEFAULT_CHARSET, DEFAULT_MIN_PROBABILITY
 
 
 """
-Fixtures:
+Pytest Fixtures:
 msg - dict() containing the following:
 message = {
         "charset": DEFAULT_CHARSET,
         "plaintext": "A super secret message",
         "caesar_ciphertext": "M 461q3 4qo3q5 yq44msq",
+        "columnar_ciphertext": "Ae ts umpeesrs asgeecr",
         "key": 12,
     }
 """
@@ -86,15 +87,13 @@ class TestCaesar:
         plaintext = msg["plaintext"]
         ciphertext = msg["caesar_ciphertext"]
         key = msg["key"]
-        result = crack_caesar(ciphertext, charset=None, verbose=False,
-                              language=DEFAULT_LANGUAGE, min_probability=DEFAULT_MIN_PROBABILITY)
+        result = crack_caesar(ciphertext, charset=None, verbose=False, min_probability=DEFAULT_MIN_PROBABILITY)
         assert result["results"]
 
     def test_crack_caesar_probable_solutions(self, msg):
         plaintext = msg["plaintext"]
         ciphertext = msg["caesar_ciphertext"]
         key = msg["key"]
-        result = crack_caesar(ciphertext, charset=None, verbose=False,
-                              language=DEFAULT_LANGUAGE, min_probability=DEFAULT_MIN_PROBABILITY)
+        result = crack_caesar(ciphertext, charset=None, verbose=False, min_probability=DEFAULT_MIN_PROBABILITY)
         assert result["probable_solutions"][key]["message"] == plaintext
         assert result["probable_solutions"][key]["probability"] == 1.0
