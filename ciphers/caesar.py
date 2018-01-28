@@ -1,6 +1,11 @@
 import enchant
 
 
+DEFAULT_CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]\{}|;\':\",./<>?`~"
+DEFAULT_LANGUAGE = "en_US"
+DEFAULT_MIN_PROBABILITY = 0.75
+
+
 def setup_charset(charset=None):
     """
     Common functionality between the caesar functions so better to abstract it out
@@ -8,7 +13,7 @@ def setup_charset(charset=None):
     :return: A charset and it's given length
     """
     if not charset:
-        charset = str("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]\{}|;\':\",./<>?`~")
+        charset = str(DEFAULT_CHARSET)
     else:
         charset = str(charset)
 
@@ -64,7 +69,7 @@ def caesar(message, key, action="encrypt", charset=None):
     return result
 
 
-def crack_caesar(message, charset=None, verbose=False, language="en_US", min_probability=0.75):
+def crack_caesar(message, charset=None, verbose=False, language=DEFAULT_LANGUAGE, min_probability=DEFAULT_MIN_PROBABILITY):
     """
     Brute force all keys in the charset and look for a plaintext message
     :param message: Encrypted Caesar cipher message
@@ -91,10 +96,8 @@ def crack_caesar(message, charset=None, verbose=False, language="en_US", min_pro
             if char in charset:
                 char_index = charset.find(char)
                 new_index = char_index - key
-
                 if new_index < 0:
                     new_index += charset_len
-
                 decrypted += charset[new_index]
             else:
                 decrypted += char
@@ -104,7 +107,10 @@ def crack_caesar(message, charset=None, verbose=False, language="en_US", min_pro
         # Check if the majority of the words are english. If so, this is probably the key we're looking for
         decrypted_parts = decrypted.split(" ")
         num_words = len(decrypted_parts)
-        probability  = 0
+        probability = 0
+
+        # Calculate the probability that this is a possible solution by spell checking the words and calculating the
+        # percentage that are english or whatever language is passed in
         for word in decrypted_parts:
             if dictionary.check(word):
                 # This is a valid english word according to enchants dictionary
@@ -116,7 +122,6 @@ def crack_caesar(message, charset=None, verbose=False, language="en_US", min_pro
                 "probability": probability,
                 "message": decrypted
             }
-
 
     if verbose:
         for k, v in results.items():

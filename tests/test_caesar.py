@@ -1,14 +1,29 @@
 import pytest
 
 from ciphers.caesar import setup_charset, caesar, crack_caesar
+from ciphers.caesar import DEFAULT_CHARSET, DEFAULT_LANGUAGE, DEFAULT_MIN_PROBABILITY
+
+
+"""
+Fixtures:
+msg - dict() containing the following:
+message = {
+        "charset": DEFAULT_CHARSET,
+        "plaintext": "A super secret message",
+        "ciphertext": "M 461q3 4qo3q5 yq44msq",
+        "key": 12,
+    }
+"""
 
 class TestCaesar:
-    def test_setup_charset(self):
+    ##### setup_charsets() #####
+    def test_setup_charset_default_charsets(self):
         # Test default values
         cs, cs_len = setup_charset()
-        assert cs == "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]\{}|;\':\",./<>?`~"
-        assert cs_len == 94
+        assert cs == DEFAULT_CHARSET
+        assert cs_len == len(DEFAULT_CHARSET)
 
+    def test_setup_charset_custom_charsets(self):
         # test custom charsets
         charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
         cs, cs_len = setup_charset(charset=charset)
@@ -16,51 +31,70 @@ class TestCaesar:
         assert isinstance(cs, str)
         assert cs_len == 62
 
+    def test_setup_charset_exceptions_bad_charset(self):
         # Test bad charset
         with pytest.raises(ValueError):
             # this contains duplicates so should raise a ValueError
             charset = "asdfghjklkkjhedbb"
             cs, cs_len = setup_charset(charset)
 
-    def test_caesar(self):
+
+    ##### caesar() #####
+    def test_caesar_encryption(self, msg):
         # Test encryption
-        msg = "A super secret message"
-        c = caesar(msg, 12, "encrypt")
-        assert c == "M 461q3 4qo3q5 yq44msq"
+        c = caesar(msg["plaintext"], msg["key"], "encrypt")
+        assert c == msg["ciphertext"]
 
+    def test_caesar_decryption(self, msg):
         # Test decryption
-        c = caesar("M 461q3 4qo3q5 yq44msq", 12, "decrypt")
-        assert c == msg
+        c = caesar(msg["ciphertext"], msg["key"], "decrypt")
+        assert c == msg["plaintext"]
 
-        # Test custom charset
+    def test_caesar_custom_charsets(self, msg):
+        # Test custom charsets
         charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-        c = caesar(msg, 12, "encrypt", charset=charset)
-        assert c == "M EGBqD EqoDqF yqEEmsq"
+        plaintext = msg["plaintext"]
+        ciphertext = "M EGBqD EqoDqF yqEEmsq"
+        # Test encrypt
+        c = caesar(plaintext, msg["key"], "encrypt", charset=charset)
+        assert c == ciphertext
+        # Test decrypt
+        c = caesar(ciphertext, msg["key"], "decrypt", charset=charset)
+        assert c == plaintext
 
-        c = caesar("M EGBqD EqoDqF yqEEmsq", 12, "decrypt", charset=charset)
-        assert c == msg
-
+    def test_caesar_exceptions_duplicates_in_charset(self, msg):
         # Test bad charset
         with pytest.raises(ValueError):
             # this contains duplicates so should raise a ValueError
             charset = "asdfghjklkkjhedbb"
-            c = caesar(msg, 12, "encrypt", charset=charset)
+            c = caesar(msg["plaintext"], msg["key"], "encrypt", charset=charset)
 
+    def test_caesar_exceptions_bad_action(self, msg):
         # Test bad action
         with pytest.raises(ValueError):
             # Action must be either encrypt or decrypt
-            c = caesar(msg, 12, "foobar")
+            c = caesar(msg["plaintext"], msg["key"], "foobar")
 
+    def test_caesar_exceptions_non_integer_key(self, msg):
         # Test non-integer key raises exception
         with pytest.raises(ValueError):
-            c = caesar(msg, "foo", "encrypt")
+            c = caesar(msg["plaintext"], "foo", "encrypt")
 
 
-    def test_crack_caesar(self):
-        plaintext = "A super secret message"
-        cipherext = "M 461q3 4qo3q5 yq44msq"
-        key = 12
-        result = crack_caesar(cipherext, charset=None, verbose=False, language="en_US", min_probability=0.75)
+    ##### crack_caesar() #####
+    def test_crack_caesar_results(self, msg):
+        plaintext = msg["plaintext"]
+        ciphertext = msg["ciphertext"]
+        key = msg["key"]
+        result = crack_caesar(ciphertext, charset=None, verbose=False,
+                              language=DEFAULT_LANGUAGE, min_probability=DEFAULT_MIN_PROBABILITY)
         assert result["results"]
+
+    def test_crack_caesar_probable_solutions(self, msg):
+        plaintext = msg["plaintext"]
+        ciphertext = msg["ciphertext"]
+        key = msg["key"]
+        result = crack_caesar(ciphertext, charset=None, verbose=False,
+                              language=DEFAULT_LANGUAGE, min_probability=DEFAULT_MIN_PROBABILITY)
         assert result["probable_solutions"][key]["message"] == plaintext
         assert result["probable_solutions"][key]["probability"] == 1.0
